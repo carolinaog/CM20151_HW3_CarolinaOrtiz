@@ -1,0 +1,75 @@
+---
+title: "prediccion"
+author: "CarolinaOG"
+date: "03/06/2015"
+output: html_document
+---
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+#Importa las librerias Quandl y ggplot2, y autentifica el usuario
+library(Quandl)
+library(ggplot2)
+library(lubridate)
+Quandl.auth("GwVs4AhMGzmm3vTWxx3_")
+
+#Descarga la tasa de cambio USD/COP desde el 2000 hasta el 2015
+mydata<-Quandl("CURRFX/USDCOP", trim_start="2000-01-01", trim_end="2015-02-23", collapse="daily")
+mydata2<-Quandl("CURRFX/USDCOP", trim_start="2000-01-01", trim_end="2015-02-23", collapse="annual")
+#Imprime los primeros 5 valores del arreglo
+head(mydata,5)
+
+#Graficar
+#Visualización de los datos de manera diaria
+USDCOPdaily <- ggplot(mydata, aes(x = Date, y = Rate, color = Rate)) + geom_line() + labs(x = "Date") + labs(y = "Rate of change") + ggtitle("USDCOP Rate change since 2000 to February 23 2015")
+USDCOPdaily
+#Visualización de los datos de manera anual
+USDCOPannual <- ggplot(mydata2, aes(x = Date, y = Rate, color = Rate))+geom_line()+ labs(x = "Date") + labs(y = "Rate of change") + ggtitle("USDCOP Annual Rate change since 2000 to February 23 2015l")
+USDCOPannual
+
+#Modelo lineal escogido por su simplicidad, y al ser un modelo estimado no incluye los errores. EL modelo lineal, provee el valor de intercepto Beta0, y el parametro Beta1. 
+cambio.lm = lm(Rate ~ Date, data=mydata)
+cambio.sum = summary(cambio.lm)
+#Imprime el resumen de los parámetros del modelo lineal
+print(cambio.sum) 
+
+#Variables para la predicción al 2017
+Beta0 <- 3.935*1000
+Beta1 <- -1.277*0.1
+t <- 2017
+#La predicción de la tasa de cambio al 2017 es:
+y <- (Beta0 + Beta1*t)
+y
+
+# Primer plot de los parámetros del modelo lineal
+par(mfrow=c(2,2))
+plot(cambio.lm)
+mtext("Cambio.lm",outer=TRUE,line=-2)
+par(mfrow=c(1,1))
+
+# Plotea la Regresión lineal
+plot(Rate ~ Date, data = mydata, pch=19)
+abline(coef(cambio.lm), col="blue")
+title("Regresión lineal de los Datos de Tasa de Cambio")
+
+# Plot con los intervalos de confianza del promedio
+Xrng = range(mydata[,"Date"])
+Xnew = seq(Xrng[1],Xrng[2],length=1000)
+Xnew.df = data.frame(Date = Xnew)
+
+Xnew.conf = predict(cambio.lm,newdata=Xnew.df,interval="confidence")
+plot(Rate ~ Date, data = mydata, pch=19)
+abline(coef(cambio.lm), col="blue")
+title("Tasa de cambio con los intervalos de confianza")
+lines(Xnew,Xnew.conf[,"lwr"],col="green")
+lines(Xnew,Xnew.conf[,"upr"],col="green")
+
+# Añade el coeficiente de determinación al gráfico
+r2 = cambio.sum$r.squared
+r2txt = paste(round(100*r2,1),"%",sep="")
+mtext(bquote(R^2 == .(r2txt)),side=1,line=-1)
+
+#Fuentes internet: https://www.utdallas.edu/~ammann/stat6338/node4.html´´´
