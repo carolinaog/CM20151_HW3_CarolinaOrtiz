@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 # In[2]:
 
 #Se descargan los archivos 
-for x in range(0,501,50):
+for x in range(0,5801,50):
     
     if x<=50:
         urllib.urlretrieve("https://github.com/forero/ComputationalMethods/raw/master/homework/2015-01/hw3/Test/test00003.txt","test00003.txt")
@@ -29,7 +29,7 @@ for x in range(0,501,50):
 #Animación de las dos primeras columnas
 
 
-for x in range(0,501,50):
+for x in range(0,5801,50):
    
    
     if x<=50:
